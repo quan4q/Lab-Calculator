@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32126.315
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lab Calculator", "Lab Calculator\Lab Calculator.csproj", "{A1E01563-6628-4667-AB7B-ABFE43BEB7BA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1E01563-6628-4667-AB7B-ABFE43BEB7BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1E01563-6628-4667-AB7B-ABFE43BEB7BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1E01563-6628-4667-AB7B-ABFE43BEB7BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1E01563-6628-4667-AB7B-ABFE43BEB7BA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9983A11F-8164-4A47-8976-684F4455E00E}
+	EndGlobalSection
+EndGlobal
