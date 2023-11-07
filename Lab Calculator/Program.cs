@@ -5,27 +5,104 @@ namespace SecondLab
 {
     internal class Program
     {
-        public static void Parse(List<double> numbers, List<char> operations, string input)
+        static List<object> Parse(string expression)
         {
+            List<object> result = new List<object>();
             string number = "";
 
-            for (int i = 0; i < input.Length; i++)
+            foreach(char symbol in expression)
             {
-                if (!char.IsDigit(input[i]))
+                if (symbol != ' ')
                 {
-                    numbers.Add(double.Parse(number));
-                    operations.Add(input[i]);
-                    number = "";
+                    if (!char.IsDigit(symbol))
+                    {
+                        if (number != "") result.Add(number);
+                        result.Add(symbol);
+                        number = "";
+                    }
+                    else
+                    {
+                        number += symbol;
+                    }
                 }
-                else
+            }
+            if (number != "") result.Add(number);
+
+            return result;
+        }
+
+        static int CheckPriority(object operation)
+        {
+            switch (operation)
+            {
+                case '+': case '-': return 1;
+                case '*': case '/': return 2;
+                default: return 0;
+            }
+        }
+
+        static List<object> ConvertToRPN(List<object> expression)
+        {
+            Stack<object> operators = new Stack<object>();
+            List<object> result = new List<object>();
+
+            foreach(object symbol in expression)
+            {
+                if(symbol is string)
                 {
-                    number += input[i];
+                    result.Add(symbol);
+                }
+                else if(symbol.Equals('-') || symbol.Equals('+') || symbol.Equals('*') || symbol.Equals('/'))
+                {
+                    while(operators.Count > 0 && CheckPriority(operators.Peek()) >= CheckPriority(symbol))
+                    {
+                        result.Add(operators.Pop());
+                    }
+                    operators.Push(symbol);
+                }
+                else if (symbol.Equals('('))
+                {
+                    operators.Push(symbol);
+                }
+                else if (symbol.Equals(')'))
+                {
+                    while(operators.Count > 0 && !operators.Peek().Equals('('))
+                    {
+                        result.Add(operators.Pop());
+                    }
+                    operators.Pop();
                 }
             }
 
-            numbers.Add(double.Parse(number));
+            while(operators.Count > 0)
+            {
+                result.Add(operators.Pop());
+            }
+
+            return result;
         }
-        public static double GetNumber(double number1, double number2, char operation)
+
+        static float Calculate(List<object> ExpInRPN)
+        {
+            for(int i = 0; i < ExpInRPN.Count; i++)
+            {
+                if (ExpInRPN[i] is char)
+                {
+                    float firstNumber = Convert.ToSingle(ExpInRPN[i - 2]);
+                    float secondNumber = Convert.ToSingle(ExpInRPN[i - 1]);
+
+                    float result = GetNumber(firstNumber, secondNumber, ExpInRPN[i]);
+
+                    ExpInRPN.RemoveRange(i - 2, 3);
+                    ExpInRPN.Insert(i - 2, result);
+                    i -= 2;
+                }
+            }
+            float CalculatedExpression = Convert.ToSingle(ExpInRPN[0]);
+
+            return CalculatedExpression;
+        }
+        public static float GetNumber(float number1, float number2, object operation)
         {
             switch (operation)
             {
@@ -36,56 +113,18 @@ namespace SecondLab
                 default: return 0;
             }
         }
-        public static void Calculate(List<double> numbers, List<char> operations)
-        {
-            while (operations.Count > 0)
-            {
-                if (operations.Contains('*') || operations.Contains('/'))
-                {
-                    int multiplicationIndex = operations.IndexOf('*');
-                    int divisionIndex = operations.IndexOf('/');
-                    int currentOperationIndex;
-
-                    if (multiplicationIndex == -1) currentOperationIndex = divisionIndex;
-                    else if (divisionIndex == -1) currentOperationIndex = multiplicationIndex;
-                    else currentOperationIndex = Math.Min(divisionIndex, multiplicationIndex);
-
-                    double firstNumber = numbers[currentOperationIndex];
-                    double secondNumber = numbers[currentOperationIndex + 1];
-                    char operation = operations[currentOperationIndex];
-
-                    double newNumber = GetNumber(firstNumber, secondNumber, operation);
-
-                    numbers.RemoveAt(currentOperationIndex + 1);
-                    numbers.RemoveAt(currentOperationIndex);
-                    operations.RemoveAt(currentOperationIndex);
-
-                    numbers.Insert(currentOperationIndex, newNumber);
-                }
-                else if (operations.Contains('+') || operations.Contains('-'))
-                {
-                    double newNumber = GetNumber(numbers[0], numbers[1], operations[0]);
-
-                    numbers.RemoveAt(1);
-                    numbers.RemoveAt(0);
-                    operations.RemoveAt(0);
-
-                    numbers.Insert(0, newNumber);
-                }
-            }
-        }
+        
         static void Main(string[] args)
-        { 
-            string input = Console.ReadLine().Replace(" ", "");
+        {
+            string expression = Console.ReadLine();
 
-            List<double> numbers = new List<double>();
-            List<char> operations = new List<char>();
+            List<object> Parsed = Parse(expression);
+            List<object> ExpInRPN = ConvertToRPN(Parsed);
 
-            Parse(numbers, operations, input);
-            Calculate(numbers, operations);
+            Console.WriteLine(string.Join(" ", ExpInRPN));
 
-            Console.WriteLine(string.Join(" ", numbers));
-            Console.ReadLine();
+            float CalculatedExpression = Calculate(ExpInRPN);
+            Console.WriteLine(CalculatedExpression);
         }
     }
 }
