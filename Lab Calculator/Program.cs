@@ -3,11 +3,30 @@ using System.Collections.Generic;
 
 namespace SecondLab
 {
+    class Token
+    {
+
+    }
+
+    class Number: Token
+    {
+        public double number;
+    }
+
+    class Operator: Token
+    {
+        public char operation;
+    }
+
+    class Parenthesis: Token
+    {
+        public bool bracket;
+    }
     internal class Program
     {
-        static List<object> Parse(string expression)
+        static List<Token> Parse(string expression)
         {
-            List<object> result = new List<object>();
+            List<Token> result = new List<Token>();
             string number = "";
 
             foreach(char symbol in expression)
@@ -16,8 +35,30 @@ namespace SecondLab
                 {
                     if (!char.IsDigit(symbol))
                     {
-                        if (number != "") result.Add(number);
-                        result.Add(symbol);
+                        if (number != "")
+                        {
+                            Number num = new Number();
+                            num.number = Convert.ToDouble(number);
+                            result.Add(num);
+                        }
+                        if (symbol.Equals('-') || symbol.Equals('+') || symbol.Equals('*') || symbol.Equals('/'))
+                        {
+                            Operator op = new Operator();
+                            op.operation = symbol;
+                            result.Add(op);
+                        }
+                        else if (symbol.Equals('('))
+                        {
+                            Parenthesis par = new Parenthesis();
+                            par.bracket = true;
+                            result.Add(par);
+                        }
+                        else
+                        {
+                            Parenthesis par = new Parenthesis();
+                            par.bracket = false;
+                            result.Add(par);
+                        }
                         number = "";
                     }
                     else
@@ -26,51 +67,64 @@ namespace SecondLab
                     }
                 }
             }
-            if (number != "") result.Add(number);
+            if (number != "")
+            {
+                Number num = new Number();
+                num.number = Convert.ToDouble(number);
+                result.Add(num);
+            }
 
             return result;
         }
 
-        static int CheckPriority(object operation)
+        static int CheckPriority(Token operation)
         {
-            switch (operation)
+            if (operation is Operator)
             {
-                case '+': case '-': return 1;
-                case '*': case '/': return 2;
-                default: return 0;
+                switch (((Operator)operation).operation)
+                {
+                    case '+': case '-': return 1;
+                    case '*': case '/': return 2;
+                    default: return 0;
+                }
             }
+            else return 0;
         }
 
-        static List<object> ConvertToRPN(List<object> expression)
+        static List<Token> ConvertToRPN(List<Token> expression)
         {
-            Stack<object> operators = new Stack<object>();
-            List<object> result = new List<object>();
+            Stack<Token> operators = new Stack<Token>();
+            List<Token> result = new List<Token>();
 
-            foreach(object symbol in expression)
+            foreach(Token symbol in expression)
             {
-                if(symbol is string)
+                if (symbol is Number)
                 {
-                    result.Add(symbol);
+                    result.Add((Number)symbol);
                 }
-                else if(symbol.Equals('-') || symbol.Equals('+') || symbol.Equals('*') || symbol.Equals('/'))
+                else if (symbol is Operator)
                 {
-                    while(operators.Count > 0 && CheckPriority(operators.Peek()) >= CheckPriority(symbol))
+                    while (operators.Count > 0 && CheckPriority(operators.Peek()) >= CheckPriority(symbol))
                     {
                         result.Add(operators.Pop());
                     }
-                    operators.Push(symbol);
+                    operators.Push((Operator)symbol);
                 }
-                else if (symbol.Equals('('))
+                else if (symbol is Parenthesis)
                 {
-                    operators.Push(symbol);
-                }
-                else if (symbol.Equals(')'))
-                {
-                    while(operators.Count > 0 && !operators.Peek().Equals('('))
+                    if (((Parenthesis)symbol).bracket)
                     {
-                        result.Add(operators.Pop());
+                        operators.Push((Parenthesis)symbol);
                     }
-                    operators.Pop();
+
+                    else
+                    {
+                        while (operators.Count > 0 && !(operators.Peek() is Parenthesis))
+                        {
+                            result.Add(operators.Pop());
+                        }
+                        operators.Pop();
+                    }
                 }
             }
 
@@ -82,48 +136,97 @@ namespace SecondLab
             return result;
         }
 
-        static float Calculate(List<object> ExpInRPN)
+        static double Calculate(List<Token> ExpInRPN)
         {
             for(int i = 0; i < ExpInRPN.Count; i++)
             {
-                if (ExpInRPN[i] is char)
+                if (ExpInRPN[i] is Operator)
                 {
-                    float firstNumber = Convert.ToSingle(ExpInRPN[i - 2]);
-                    float secondNumber = Convert.ToSingle(ExpInRPN[i - 1]);
+                    Number firstNumber = new();
+                    Number secondNumber = new();
+                    firstNumber = (Number)ExpInRPN[i - 2];
+                    secondNumber = (Number)ExpInRPN[i - 1];
 
-                    float result = GetNumber(firstNumber, secondNumber, ExpInRPN[i]);
+                    Number result = new();
+                    result = GetNumber(firstNumber, secondNumber, (Operator)ExpInRPN[i]);
 
                     ExpInRPN.RemoveRange(i - 2, 3);
                     ExpInRPN.Insert(i - 2, result);
                     i -= 2;
                 }
             }
-            float CalculatedExpression = Convert.ToSingle(ExpInRPN[0]);
+            Number calc = new();
+            calc = (Number)ExpInRPN[0];
+            double CalculatedExpression = calc.number;
 
             return CalculatedExpression;
         }
-        public static float GetNumber(float number1, float number2, object operation)
+        static Number GetNumber(Number number1, Number number2, Operator operation)
         {
-            switch (operation)
+            Number result = new();
+            if(operation.operation == '+')
             {
-                case '+': return number1 + number2;
-                case '-': return number1 - number2;
-                case '*': return number1 * number2;
-                case '/': return number1 / number2;
-                default: return 0;
+                result.number = number1.number + number2.number;
             }
+            if (operation.operation == '-')
+            {
+                result.number = number1.number - number2.number;
+            }
+            if (operation.operation == '*')
+            {
+                result.number = number1.number * number2.number;
+            }
+            if (operation.operation == '/')
+            {
+                result.number = number1.number / number2.number;
+            }
+            return result;
+        }
+
+        static void Print(List<Token> ListToPrint)
+        {
+            foreach(Token e in ListToPrint)
+            {
+                if(e is Number)
+                {
+                    Number num = new();
+                    num = (Number)e;
+                    Console.Write(num.number);
+                    Console.Write(" ");
+                }
+                else if(e is Operator)
+                {
+                    Operator op = new();
+                    op = (Operator)e;
+                    Console.Write(op.operation);
+                    Console.Write(" ");
+                }
+                else
+                {
+                    Parenthesis bracket = new();
+                    bracket = (Parenthesis)e;
+                    if (bracket.bracket) Console.Write("( ");
+                    else Console.Write(") ");
+                }
+            }
+            Console.Write("\n");
         }
         
         static void Main(string[] args)
         {
             string expression = Console.ReadLine();
 
-            List<object> Parsed = Parse(expression);
-            List<object> ExpInRPN = ConvertToRPN(Parsed);
+            List<Token> Parsed = Parse(expression);
+            List<Token> ExpInRPN = ConvertToRPN(Parsed);
 
-            Console.WriteLine(string.Join(" ", ExpInRPN));
+            Console.Write("Parsed expression: ");
+            Print(Parsed);
 
-            float CalculatedExpression = Calculate(ExpInRPN);
+            Console.Write("Expression in RPN: ");
+            Print(ExpInRPN);
+
+            double CalculatedExpression = Calculate(ExpInRPN);
+            Console.Write("Calculated expression: ");
             Console.WriteLine(CalculatedExpression);
         }
     }
