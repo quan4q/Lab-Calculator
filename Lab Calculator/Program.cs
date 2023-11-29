@@ -138,28 +138,29 @@ namespace SecondLab
 
         static double Calculate(List<Token> ExpInRPN)
         {
-            for(int i = 0; i < ExpInRPN.Count; i++)
+            Stack<double> numbers = new();
+
+            foreach (Token token in ExpInRPN)
             {
-                if (ExpInRPN[i] is Operator)
+                if (token is Number number)
                 {
-                    Number firstNumber = new();
-                    Number secondNumber = new();
-                    firstNumber = (Number)ExpInRPN[i - 2];
-                    secondNumber = (Number)ExpInRPN[i - 1];
+                    numbers.Push(number.number);
+                }
+                else if (token is Operator operation)
+                {
+                    double second = numbers.Pop();
+                    double first = numbers.Pop();
+                    Number firstNum = new();
+                    firstNum.number = first;
+                    Number secondNum = new();
+                    secondNum.number = second;
 
-                    Number result = new();
-                    result = GetNumber(firstNumber, secondNumber, (Operator)ExpInRPN[i]);
-
-                    ExpInRPN.RemoveRange(i - 2, 3);
-                    ExpInRPN.Insert(i - 2, result);
-                    i -= 2;
+                    double resultedNum = (GetNumber((Number)firstNum, (Number)secondNum, (Operator)token)).number;
+                    numbers.Push(resultedNum);
                 }
             }
-            Number calc = new();
-            calc = (Number)ExpInRPN[0];
-            double CalculatedExpression = calc.number;
 
-            return CalculatedExpression;
+            return numbers.Pop();
         }
         static Number GetNumber(Number number1, Number number2, Operator operation)
         {
